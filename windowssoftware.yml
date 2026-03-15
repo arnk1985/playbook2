@@ -1,0 +1,22 @@
+---
+- name: Get installed software from Windows servers
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+
+    - name: Get installed software from registry
+      win_shell: |
+        $paths = @(
+        "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
+        "HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
+        )
+        Get-ItemProperty $paths |
+        Where-Object {$_.DisplayName} |
+        Select-Object DisplayName, DisplayVersion, Publisher |
+        Sort-Object DisplayName
+      register: installed_software
+
+    - name: Show installed software
+      debug:
+        var: installed_software.stdout_lines
